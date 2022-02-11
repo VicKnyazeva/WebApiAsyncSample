@@ -13,6 +13,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using WebApiAsync.Services;
+using WebApiAsync.Services.Impl;
+
 namespace WebApiAsync
 {
     public class Startup
@@ -27,6 +30,7 @@ namespace WebApiAsync
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<IPostService, PostService>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WebApiAsync.ConsoleClient
@@ -16,10 +17,14 @@ namespace WebApiAsync.ConsoleClient
         const string writePath = @"result.txt";
         const string url = "https://localhost:5001/api/Posts/";
 
-        static async Task<PostDTO> LoadPost(int id)
+        static async Task<PostDTO> LoadPost(int id, CancellationToken cancellationToken)
         {
             string uri = $"{url}{id}";
-            HttpResponseMessage response = await client.GetAsync(uri);
+            HttpResponseMessage response = await client.GetAsync(uri, cancellationToken);
+
+            if(cancellationToken.IsCancellationRequested)
+                return null;
+
             response.EnsureSuccessStatusCode();
             var post = await response.Content.ReadFromJsonAsync<PostDTO>();
             return post;
@@ -31,7 +36,10 @@ namespace WebApiAsync.ConsoleClient
                 outputTemplate: "[{Timestamp:HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
                 ).CreateLogger();
 
-            await Task.Delay(2000);
+            using CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
+            //source.Cancel();           
 
             using (var sw = File.CreateText(writePath))
             {
@@ -39,7 +47,7 @@ namespace WebApiAsync.ConsoleClient
 
                 for (int i = 4; i <= 13; ++i)
                 {
-                    tasks.Add(LoadPost(i));
+                    tasks.Add(LoadPost(i, token));
                 }
 
                 try
